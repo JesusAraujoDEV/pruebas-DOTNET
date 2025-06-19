@@ -56,41 +56,9 @@ namespace LibrosAutoresApi.Data
                 .HasForeignKey(l => l.AutorId)
                 .IsRequired(); // Un Libro siempre debe tener un Autor
 
-            // **************** Seed Data (Datos Iniciales) ****************
-            // Aquí definimos los datos que se cargarán en la base de datos en memoria al inicio.
-
-            // Seed Autores
-            modelBuilder.Entity<Autor>().HasData(
-                new Autor { Id = 1, Nombre = "Gabriel García Márquez", FechaNacimiento = new DateTime(1927, 3, 6) },
-                new Autor { Id = 2, Nombre = "Miguel de Cervantes", FechaNacimiento = new DateTime(1547, 9, 29) },
-                new Autor { Id = 3, Nombre = "George Orwell", FechaNacimiento = new DateTime(1903, 6, 25) }
-            );
-
-            // Seed Biografias (asociadas a Autores existentes)
-            modelBuilder.Entity<Biografia>().HasData(
-                new Biografia { AutorId = 1, Contenido = "Gabriel García Márquez fue un escritor y periodista colombiano. Nació en Aracataca en 1927. Conocido por sus novelas y cuentos, fue el máximo exponente del realismo mágico. Recibió el Premio Nobel de Literatura en 1982." }
-            );
-
-            // Seed Eventos
-            modelBuilder.Entity<Evento>().HasData(
-                new Evento { Id = 201, Nombre = "Feria del Libro de Bogotá", Fecha = new DateTime(2025, 4, 20), Ubicacion = "Corferias" },
-                new Evento { Id = 202, Nombre = "Conferencia de Escritores", Fecha = new DateTime(2025, 7, 15), Ubicacion = "Medellín" }
-            );
-
-            // Seed AutorEventos (relaciones Muchos-a-Muchos)
-            modelBuilder.Entity<AutorEvento>().HasData(
-                new AutorEvento { AutorId = 1, EventoId = 201 }, // García Márquez en Feria del Libro
-                new AutorEvento { AutorId = 3, EventoId = 202 }  // George Orwell en Conferencia
-            );
-
-            // Seed Libros
-            modelBuilder.Entity<Libro>().HasData(
-                new Libro { Id = 101, Titulo = "Cien años de soledad", AnioPublicacion = 1967, AutorId = 1 },
-                new Libro { Id = 102, Titulo = "El amor en los tiempos del cólera", AnioPublicacion = 1985, AutorId = 1 },
-                new Libro { Id = 103, Titulo = "Don Quijote de la Mancha", AnioPublicacion = 1605, AutorId = 2 },
-                new Libro { Id = 104, Titulo = "La granja de los animales", AnioPublicacion = 1945, AutorId = 3 },
-                new Libro { Id = 105, Titulo = "1984", AnioPublicacion = 1949, AutorId = 3 }
-            );
+            // *** ¡IMPORTANTE! Hemos eliminado todas las llamadas a .HasData() aquí. ***
+            // Para una base de datos real, los datos iniciales se gestionan con migraciones
+            // o scripts de seeding separados para evitar re-insertar datos en cada inicio.
         }
     }
 }

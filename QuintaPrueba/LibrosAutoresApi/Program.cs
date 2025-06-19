@@ -1,35 +1,32 @@
 // Program.cs
 // Archivo de inicio y configuración de la aplicación ASP.NET Core Web API.
 
-using LibrosAutoresApi.Data;
+using LibrosAutoresApi.Data; // Necesario para tu AppDbContext
 using LibrosAutoresApi.Services.Autor;
 using LibrosAutoresApi.Services.Libro;
 using LibrosAutoresApi.Services.Biografia;
 using LibrosAutoresApi.Services.Evento;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization; // ¡NUEVO! Necesario para ReferenceHandler
+using Microsoft.EntityFrameworkCore; // Necesario para UseNpgsql y Database.Migrate()
+using System.Text.Json.Serialization; // Necesario para ReferenceHandler
 
 var builder = WebApplication.CreateBuilder(args);
 
 // **************** CONFIGURACIÓN DE SERVICIOS ****************
 
-// Configura los controladores y el serializador JSON
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // ¡NUEVO! Configura el serializador JSON para manejar ciclos de referencia.
-        // Esto previene el error "possible object cycle was detected".
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        // Opcional: Si quieres un formato más legible en el JSON de salida (camelCase por defecto)
-        // options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
-
-// Configura DbContext para usar una base de datos en memoria.
+// ¡CAMBIO CLAVE! Configura DbContext para usar PostgreSQL.
+// Obtiene la cadena de conexión del archivo appsettings.json
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase("LibrosAutoresDb")); // Nombre de tu base de datos en memoria
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Registra tus servicios para la inyección de dependencias.
+// Siguen siendo AddScoped.
 builder.Services.AddScoped<IAutorService, AutorService>();
 builder.Services.AddScoped<ILibroService, LibroService>();
 builder.Services.AddScoped<IBiografiaService, BiografiaService>();
@@ -43,13 +40,28 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// **************** INICIALIZACIÓN DE LA BASE DE DATOS (Solo para In-Memory) ****************
-using (var scope = app.Services.CreateScope())
+// **************** APLICAR MIGRACIONES AL INICIO (Solo para desarrollo) ****************
+// En producción, es mejor ejecutar las migraciones como un paso separado
+// en tu proceso de despliegue. Aquí lo hacemos al inicio para conveniencia de desarrollo.
+if (app.Environment.IsDevelopment())
 {
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<AppDbContext>();
-    context.Database.EnsureCreated(); // Asegura que la base de datos en memoria se cree
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<AppDbContext>();
+            context.Database.Migrate(); // Aplica las migraciones pendientes a la base de datos
+        }
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+            // Aquí podrías manejar el error, por ejemplo, detener la aplicación o registrarlo.
+        }
+    }
 }
+
 
 // **************** CONFIGURACIÓN DEL PIPELINE DE SOLICITUDES HTTP ****************
 
