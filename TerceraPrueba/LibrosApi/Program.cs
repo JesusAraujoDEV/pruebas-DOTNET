@@ -1,41 +1,47 @@
+// Program.cs
+// Archivo de inicio y configuración de la aplicación ASP.NET Core Web API.
+
+using LibrosApi.Services.Autor;
+using LibrosApi.Services.Libro;
+using LibrosApi.Services.Biografia; // <-- Nuevo
+using LibrosApi.Services.Evento;   // <-- Nuevo
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// **************** CONFIGURACIÓN DE SERVICIOS ****************
+
+builder.Services.AddControllers();
+
+// Registro de los servicios existentes
+builder.Services.AddSingleton<IAutorService, AutorService>();
+builder.Services.AddSingleton<ILibroService, LibroService>();
+
+// ¡Nuevos registros de servicios!
+builder.Services.AddSingleton<IBiografiaService, BiografiaService>(); // <-- Nuevo
+builder.Services.AddSingleton<IEventoService, EventoService>();     // <-- Nuevo
+
+// Configura Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// **************** CONSTRUCCIÓN DE LA APLICACIÓN ****************
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// **************** CONFIGURACIÓN DEL PIPELINE DE SOLICITUDES HTTP ****************
+
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+app.UseAuthorization();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapControllers();
+
+// **************** INICIO DE LA APLICACIÓN ****************
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
