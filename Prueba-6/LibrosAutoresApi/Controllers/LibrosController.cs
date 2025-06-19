@@ -1,6 +1,6 @@
 // Controllers/LibrosController.cs
 // Controlador de API para gestionar los Libros.
-
+using Microsoft.AspNetCore.Authorization; // ¡NUEVO! Para el atributo [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using LibrosAutoresApi.Models; // Para los modelos
@@ -13,6 +13,7 @@ namespace LibrosAutoresApi.Controllers
 {
     [ApiController] // Indica que esta clase es un controlador de API
     [Route("api/[controller]")] // Define la ruta base: /api/Libros
+    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
     public class LibrosController : ControllerBase
     {
         private readonly ILibroService _libroService; // Inyección del servicio de Libro

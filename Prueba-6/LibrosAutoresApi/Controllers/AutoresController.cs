@@ -1,6 +1,6 @@
 // Controllers/AutoresController.cs
 // Controlador de API para gestionar los Autores.
-
+using Microsoft.AspNetCore.Authorization; // ¡NUEVO! Para el atributo [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using LibrosAutoresApi.Models; // Para los modelos
@@ -9,17 +9,23 @@ using LibrosAutoresApi.Services.Libro; // Para el servicio de Libro
 using LibrosAutoresApi.Dtos.Autor; // Para los DTOs de Autor
 using System.Threading.Tasks; // Necesario para Task
 
+using Microsoft.AspNetCore.Authorization; // Para [Authorize]
+using Microsoft.Extensions.Logging; // Para inyectar ILogger
+
 namespace LibrosAutoresApi.Controllers
 {
-    [ApiController] // Indica que esta clase es un controlador de API
-    [Route("api/[controller]")] // Define la ruta base: /api/Autores
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize] // Este controlador ahora requiere autenticación
     public class AutoresController : ControllerBase
     {
-        private readonly IAutorService _autorService; // Inyección de la interfaz del servicio
+        private readonly IAutorService _autorService;
+        private readonly ILogger<AutoresController> _logger; // Inyección del logger en el controlador
 
-        public AutoresController(IAutorService autorService)
+        public AutoresController(IAutorService autorService, ILogger<AutoresController> logger)
         {
             _autorService = autorService;
+            _logger = logger;
         }
 
         // GET api/Autores
@@ -34,14 +40,13 @@ namespace LibrosAutoresApi.Controllers
         // GET api/Autores/{id}
         // Obtiene un autor por su ID.
         [HttpGet("{id}")]
-        public async Task<ActionResult<Models.Autor>> Get(int id) // Ahora async Task
+        public async Task<ActionResult<Models.Autor>> Get(int id)
         {
-            var autor = await _autorService.GetById(id); // Usamos await
-            if (autor == null)
-            {
-                return NotFound(); // HTTP 404
-            }
-            return Ok(autor); // HTTP 200
+            _logger.LogInformation("Solicitud GET para autor con ID: {AutorId}", id);
+            // El servicio lanzará NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
+            var autor = await _autorService.GetById(id);
+            return Ok(autor); // Si llega aquí, el autor fue encontrado.
         }
 
         // GET api/Autores/{id}/libros
@@ -99,16 +104,15 @@ namespace LibrosAutoresApi.Controllers
         }
 
         // DELETE api/Autores/{id}
-        // Elimina un autor.
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id) // Ahora async Task
+        public async Task<IActionResult> Delete(int id)
         {
-            bool eliminado = await _autorService.Delete(id); // Usamos await
-            if (!eliminado)
-            {
-                return NotFound(); // HTTP 404
-            }
-            return NoContent(); // HTTP 204
+            _logger.LogInformation("Solicitud DELETE para autor con ID: {AutorId}", id);
+            // El servicio lanzará NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
+            bool eliminado = await _autorService.Delete(id);
+            // Si el método Delete del servicio devuelve true, significa que se eliminó con éxito.
+            return NoContent();
         }
     }
 }

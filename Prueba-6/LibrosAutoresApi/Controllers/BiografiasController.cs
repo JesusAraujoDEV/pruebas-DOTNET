@@ -1,6 +1,6 @@
 // Controllers/BiografiasController.cs
 // Controlador de API para gestionar las Biografías.
-
+using Microsoft.AspNetCore.Authorization; // ¡NUEVO! Para el atributo [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using LibrosAutoresApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
@@ -12,6 +12,7 @@ namespace LibrosAutoresApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // Ruta base: /api/Biografias
+    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
     public class BiografiasController : ControllerBase
     {
         private readonly IBiografiaService _biografiaService;

@@ -1,6 +1,6 @@
 // Controllers/EventosController.cs
 // Controlador de API para gestionar los Eventos y sus relaciones Muchos-a-Muchos con Autores.
-
+using Microsoft.AspNetCore.Authorization; // ¡NUEVO! Para el atributo [Authorize]
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using LibrosAutoresApi.Models; // Necesario para referenciar las clases Evento y Autor (los modelos)
@@ -13,6 +13,7 @@ namespace LibrosAutoresApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")] // Ruta base: /api/Eventos
+    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
     public class EventosController : ControllerBase
     {
         private readonly IEventoService _eventoService;
