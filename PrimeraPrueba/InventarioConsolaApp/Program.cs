@@ -5,7 +5,6 @@ using System.Linq;                 // Para usar métodos como .Any() o .Max() en
 
 
 // See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
 
 namespace InventarioConsolaApp // Si tu plantilla usa namespace, manténlo. Si no, quítalo.
 {
