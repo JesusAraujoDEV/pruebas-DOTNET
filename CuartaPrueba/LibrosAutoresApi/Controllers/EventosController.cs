@@ -7,6 +7,7 @@ using LibrosAutoresApi.Models; // Necesario para referenciar las clases Evento y
 using LibrosAutoresApi.Services.Evento; // Necesario para referenciar el servicio IEventoService
 using LibrosAutoresApi.Services.Autor; // Para validar existencia de Autor (servicio IAutorService)
 using LibrosAutoresApi.Dtos.Evento; // Para los DTOs de Evento
+using System.Threading.Tasks; // Necesario para Task
 
 namespace LibrosAutoresApi.Controllers
 {
@@ -25,17 +26,17 @@ namespace LibrosAutoresApi.Controllers
 
         // GET api/Eventos
         [HttpGet]
-        public ActionResult<IEnumerable<Models.Evento>> Get() // Corregido: Models.Evento
+        public async Task<ActionResult<IEnumerable<Models.Evento>>> Get() // Ahora async Task
         {
-            var eventos = _eventoService.GetAll();
+            var eventos = await _eventoService.GetAll(); // Usamos await
             return Ok(eventos);
         }
 
         // GET api/Eventos/{id}
         [HttpGet("{id}")]
-        public ActionResult<Models.Evento> Get(int id) // Corregido: Models.Evento
+        public async Task<ActionResult<Models.Evento>> Get(int id) // Ahora async Task
         {
-            var evento = _eventoService.GetById(id);
+            var evento = await _eventoService.GetById(id); // Usamos await
             if (evento == null)
             {
                 return NotFound();
@@ -46,41 +47,41 @@ namespace LibrosAutoresApi.Controllers
         // GET api/Eventos/{id}/autores
         // Obtiene todos los autores asociados a un evento específico (relación M-M).
         [HttpGet("{id}/autores")]
-        public ActionResult<IEnumerable<Models.Autor>> GetAutores(int id) // Corregido: Models.Autor
+        public async Task<ActionResult<IEnumerable<Models.Autor>>> GetAutores(int id) // Ahora async Task
         {
-            if (_eventoService.GetById(id) == null)
+            if (await _eventoService.GetById(id) == null) // Usamos await
             {
                 return NotFound($"Evento con ID {id} no encontrado.");
             }
-            var autores = _eventoService.GetAutoresByEventoId(id);
+            var autores = await _eventoService.GetAutoresByEventoId(id); // Usamos await
             return Ok(autores);
         }
 
         // POST api/Eventos
         [HttpPost]
-        public ActionResult<Models.Evento> Post([FromBody] CrearEventoDto crearEventoDto) // Corregido: Models.Evento
+        public async Task<ActionResult<Models.Evento>> Post([FromBody] CrearEventoDto crearEventoDto) // Ahora async Task
         {
-            var nuevoEvento = new Models.Evento // Corregido: Models.Evento
+            var nuevoEvento = new Models.Evento
             {
                 Nombre = crearEventoDto.Nombre,
                 Fecha = crearEventoDto.Fecha,
                 Ubicacion = crearEventoDto.Ubicacion
             };
 
-            _eventoService.Add(nuevoEvento);
+            await _eventoService.Add(nuevoEvento); // Usamos await
             return CreatedAtAction(nameof(Get), new { id = nuevoEvento.Id }, nuevoEvento);
         }
 
         // PUT api/Eventos/{id}
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] ActualizarEventoDto actualizarEventoDto)
+        public async Task<IActionResult> Put(int id, [FromBody] ActualizarEventoDto actualizarEventoDto) // Ahora async Task
         {
             if (id != actualizarEventoDto.Id)
             {
                 return BadRequest("El ID en la ruta no coincide con el ID en el cuerpo.");
             }
 
-            var eventoParaActualizar = new Models.Evento // Corregido: Models.Evento
+            var eventoParaActualizar = new Models.Evento
             {
                 Id = actualizarEventoDto.Id,
                 Nombre = actualizarEventoDto.Nombre,
@@ -88,7 +89,7 @@ namespace LibrosAutoresApi.Controllers
                 Ubicacion = actualizarEventoDto.Ubicacion
             };
 
-            bool actualizado = _eventoService.Update(eventoParaActualizar);
+            bool actualizado = await _eventoService.Update(eventoParaActualizar); // Usamos await
             if (!actualizado)
             {
                 return NotFound();
@@ -99,18 +100,20 @@ namespace LibrosAutoresApi.Controllers
         // POST api/Eventos/{eventoId}/autores
         // Asocia un autor existente a un evento (para la relación Muchos-a-Muchos).
         [HttpPost("{eventoId}/autores")]
-        public IActionResult AsociarAutorAEvento(int eventoId, [FromBody] AsociarAutorEventoDto dto)
+        public async Task<IActionResult> AsociarAutorAEvento(int eventoId, [FromBody] AsociarAutorEventoDto dto) // Ahora async Task
         {
-            if (_eventoService.GetById(eventoId) == null)
+            // Validar que el evento y el autor existan
+            if (await _eventoService.GetById(eventoId) == null) // Usamos await
             {
                 return NotFound($"Evento con ID {eventoId} no encontrado.");
             }
-            if (_autorService.GetById(dto.AutorId) == null)
+            if (await _autorService.GetById(dto.AutorId) == null) // Usamos await
             {
                 return NotFound($"Autor con ID {dto.AutorId} no encontrado.");
             }
 
-            bool exito = _eventoService.AddAutorToEvento(eventoId, dto.AutorId);
+            // Intentar agregar la relación
+            bool exito = await _eventoService.AddAutorToEvento(eventoId, dto.AutorId); // Usamos await
             if (!exito)
             {
                 return Conflict($"El autor con ID {dto.AutorId} ya está asociado al evento con ID {eventoId}.");
@@ -122,18 +125,19 @@ namespace LibrosAutoresApi.Controllers
         // DELETE api/Eventos/{eventoId}/autores/{autorId}
         // Desasocia un autor de un evento (para la relación Muchos-a-Muchos).
         [HttpDelete("{eventoId}/autores/{autorId}")]
-        public IActionResult DesasociarAutorDeEvento(int eventoId, int autorId)
+        public async Task<IActionResult> DesasociarAutorDeEvento(int eventoId, int autorId) // Ahora async Task
         {
-            if (_eventoService.GetById(eventoId) == null)
+            // Validar que el evento y el autor existan (opcional, el servicio ya lo hará)
+            if (await _eventoService.GetById(eventoId) == null) // Usamos await
             {
                 return NotFound($"Evento con ID {eventoId} no encontrado.");
             }
-            if (_autorService.GetById(autorId) == null)
+            if (await _autorService.GetById(autorId) == null) // Usamos await
             {
                 return NotFound($"Autor con ID {autorId} no encontrado.");
             }
 
-            bool exito = _eventoService.RemoveAutorFromEvento(eventoId, autorId);
+            bool exito = await _eventoService.RemoveAutorFromEvento(eventoId, autorId); // Usamos await
             if (!exito)
             {
                 return NotFound($"La asociación entre el evento {eventoId} y el autor {autorId} no fue encontrada.");

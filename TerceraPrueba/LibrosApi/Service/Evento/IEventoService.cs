@@ -2,9 +2,9 @@
 // Interfaz para el servicio de gestión de Eventos.
 
 using System.Collections.Generic;
-using LibrosApi.Models; // Necesario para referenciar las clases Evento y Autor (los modelos)
+using LibrosAutoresApi.Models; // Necesario para referenciar las clases Evento y Autor (los modelos)
 
-namespace LibrosApi.Services.Evento
+namespace LibrosAutoresApi.Services.Evento
 {
     public interface IEventoService
     {

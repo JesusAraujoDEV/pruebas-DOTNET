@@ -2,10 +2,11 @@
 // Controlador de API para gestionar las Biografías.
 
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic; // Aunque no se usa directamente aquí, es buena práctica si se necesitara
+using System.Collections.Generic;
 using LibrosAutoresApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
 using LibrosAutoresApi.Services.Biografia; // Necesario para referenciar el servicio IBiografiaService
 using LibrosAutoresApi.Dtos.Biografia; // Para los DTOs de Biografia
+using System.Threading.Tasks; // Necesario para Task
 
 namespace LibrosAutoresApi.Controllers
 {
@@ -23,9 +24,9 @@ namespace LibrosAutoresApi.Controllers
         // GET api/Biografias/{autorId}
         // Obtiene la biografía de un autor específico.
         [HttpGet("{autorId}")]
-        public ActionResult<Models.Biografia> Get(int autorId) // Corregido: Models.Biografia
+        public async Task<ActionResult<Models.Biografia>> Get(int autorId) // Ahora async Task
         {
-            var biografia = _biografiaService.GetByAutorId(autorId);
+            var biografia = await _biografiaService.GetByAutorId(autorId); // Usamos await
             if (biografia == null)
             {
                 return NotFound($"Biografía no encontrada para el autor con ID {autorId}."); // HTTP 404
@@ -36,15 +37,15 @@ namespace LibrosAutoresApi.Controllers
         // POST api/Biografias
         // Crea una nueva biografía para un autor.
         [HttpPost]
-        public ActionResult<Models.Biografia> Post([FromBody] CrearBiografiaDto crearBiografiaDto) // Corregido: Models.Biografia
+        public async Task<ActionResult<Models.Biografia>> Post([FromBody] CrearBiografiaDto crearBiografiaDto) // Ahora async Task
         {
-            var nuevaBiografia = new Models.Biografia // Corregido: Models.Biografia
+            var nuevaBiografia = new Models.Biografia
             {
                 AutorId = crearBiografiaDto.AutorId,
                 Contenido = crearBiografiaDto.Contenido
             };
 
-            var biografiaAgregada = _biografiaService.Add(nuevaBiografia);
+            var biografiaAgregada = await _biografiaService.Add(nuevaBiografia); // Usamos await
 
             if (biografiaAgregada == null)
             {
@@ -57,20 +58,20 @@ namespace LibrosAutoresApi.Controllers
         // PUT api/Biografias/{autorId}
         // Actualiza una biografía existente.
         [HttpPut("{autorId}")]
-        public IActionResult Put(int autorId, [FromBody] ActualizarBiografiaDto actualizarBiografiaDto)
+        public async Task<IActionResult> Put(int autorId, [FromBody] ActualizarBiografiaDto actualizarBiografiaDto) // Ahora async Task
         {
             if (autorId != actualizarBiografiaDto.AutorId)
             {
                 return BadRequest("El ID del autor en la ruta no coincide con el ID en el cuerpo."); // HTTP 400
             }
 
-            var biografiaParaActualizar = new Models.Biografia // Corregido: Models.Biografia
+            var biografiaParaActualizar = new Models.Biografia
             {
                 AutorId = actualizarBiografiaDto.AutorId,
                 Contenido = actualizarBiografiaDto.Contenido
             };
 
-            bool actualizado = _biografiaService.Update(biografiaParaActualizar);
+            bool actualizado = await _biografiaService.Update(biografiaParaActualizar); // Usamos await
             if (!actualizado)
             {
                 return NotFound($"Biografía no encontrada para el autor con ID {autorId}."); // HTTP 404
@@ -81,9 +82,9 @@ namespace LibrosAutoresApi.Controllers
         // DELETE api/Biografias/{autorId}
         // Elimina la biografía de un autor.
         [HttpDelete("{autorId}")]
-        public IActionResult Delete(int autorId)
+        public async Task<IActionResult> Delete(int autorId) // Ahora async Task
         {
-            bool eliminado = _biografiaService.Delete(autorId);
+            bool eliminado = await _biografiaService.Delete(autorId); // Usamos await
             if (!eliminado)
             {
                 return NotFound($"Biografía no encontrada para el autor con ID {autorId}."); // HTTP 404

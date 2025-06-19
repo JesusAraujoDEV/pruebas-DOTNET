@@ -1,10 +1,10 @@
 // Services/Libro/ILibroService.cs
 // Interfaz (contrato) para el servicio de gestión de Libros.
 
-using LibrosApi.Models; // Para referenciar la clase Libro y Autor
+using LibrosAutoresApi.Models; // Para referenciar la clase Libro y Autor
 using System.Collections.Generic; // Para IEnumerable
 
-namespace LibrosApi.Services.Libro
+namespace LibrosAutoresApi.Services.Libro
 {
     public interface ILibroService
     {

@@ -1,11 +1,11 @@
 // Services/Autor/AutorService.cs
 // Implementación del servicio de gestión de Autores.
 
-using LibrosApi.Models; // Para referenciar la clase Autor
+using LibrosAutoresApi.Models; // Para referenciar la clase Autor
 using System.Collections.Generic; // Para List<T>
 using System.Linq; // Para LINQ (Any, Max, FirstOrDefault, Remove)
 
-namespace LibrosApi.Services.Autor
+namespace LibrosAutoresApi.Services.Autor
 {
     public class AutorService : IAutorService
     {

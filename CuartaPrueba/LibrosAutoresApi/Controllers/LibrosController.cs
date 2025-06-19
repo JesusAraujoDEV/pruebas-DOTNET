@@ -7,6 +7,7 @@ using LibrosAutoresApi.Models; // Para los modelos
 using LibrosAutoresApi.Services.Libro; // Para el servicio de Libro
 using LibrosAutoresApi.Services.Autor; // Para el servicio de Autor (para validación)
 using LibrosAutoresApi.Dtos.Libro; // Para los DTOs de Libro
+using System.Threading.Tasks; // Necesario para Task (siempre asegúrate de tenerlo)
 
 namespace LibrosAutoresApi.Controllers
 {
@@ -26,18 +27,18 @@ namespace LibrosAutoresApi.Controllers
         // GET api/Libros
         // Obtiene todos los libros.
         [HttpGet]
-        public ActionResult<IEnumerable<Models.Libro>> Get()
+        public async Task<ActionResult<IEnumerable<Models.Libro>>> Get() // Debe ser async Task
         {
-            var libros = _libroService.GetAll();
+            var libros = await _libroService.GetAll(); // ¡AQUÍ: DEBE LLEVAR await!
             return Ok(libros);
         }
 
         // GET api/Libros/{id}
         // Obtiene un libro por su ID.
         [HttpGet("{id}")]
-        public ActionResult<Models.Libro> Get(int id)
+        public async Task<ActionResult<Models.Libro>> Get(int id) // Debe ser async Task
         {
-            var libro = _libroService.GetById(id);
+            var libro = await _libroService.GetById(id); // ¡AQUÍ: DEBE LLEVAR await!
             if (libro == null)
             {
                 return NotFound(); // HTTP 404
@@ -48,10 +49,10 @@ namespace LibrosAutoresApi.Controllers
         // POST api/Libros
         // Crea un nuevo libro.
         [HttpPost]
-        public ActionResult<Models.Libro> Post([FromBody] CrearLibroDto crearLibroDto)
+        public async Task<ActionResult<Models.Libro>> Post([FromBody] CrearLibroDto crearLibroDto) // Debe ser async Task
         {
             // Validar que el AutorId exista antes de crear el libro.
-            if (_autorService.GetById(crearLibroDto.AutorId) == null)
+            if (await _autorService.GetById(crearLibroDto.AutorId) == null) // ¡AQUÍ: DEBE LLEVAR await!
             {
                 return BadRequest($"El Autor con ID {crearLibroDto.AutorId} no existe."); // HTTP 400
             }
@@ -60,14 +61,14 @@ namespace LibrosAutoresApi.Controllers
             {
                 Titulo = crearLibroDto.Titulo,
                 AnioPublicacion = crearLibroDto.AnioPublicacion,
-                AutorId = crearLibroDto.AutorId // ¡IMPORTANTE! Asignar AutorId desde el DTO
+                AutorId = crearLibroDto.AutorId
             };
 
-            var libroAgregado = _libroService.Add(nuevoLibro); // El servicio asigna el ID y carga el Autor
+            var libroAgregado = await _libroService.Add(nuevoLibro); // ¡AQUÍ: DEBE LLEVAR await!
 
-            if (libroAgregado == null) // Si el servicio devuelve null (por ejemplo, por autor no encontrado o error interno)
+            if (libroAgregado == null)
             {
-                return StatusCode(500, "Ocurrió un error al agregar el libro."); // HTTP 500
+                return StatusCode(500, "Ocurrió un error al agregar el libro.");
             }
 
             return CreatedAtAction(nameof(Get), new { id = libroAgregado.Id }, libroAgregado); // HTTP 201
@@ -76,18 +77,17 @@ namespace LibrosAutoresApi.Controllers
         // PUT api/Libros/{id}
         // Actualiza un libro existente.
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] ActualizarLibroDto actualizarLibroDto)
+        public async Task<IActionResult> Put(int id, [FromBody] ActualizarLibroDto actualizarLibroDto) // Debe ser async Task
         {
-            // Valida que el ID en la ruta coincida con el ID del objeto enviado en el cuerpo.
             if (id != actualizarLibroDto.Id)
             {
-                return BadRequest("El ID del libro en la ruta no coincide con el ID en el cuerpo de la solicitud."); // HTTP 400
+                return BadRequest("El ID del libro en la ruta no coincide con el ID en el cuerpo de la solicitud.");
             }
 
             // Validar que el AutorId exista antes de actualizar el libro.
-            if (_autorService.GetById(actualizarLibroDto.AutorId) == null)
+            if (await _autorService.GetById(actualizarLibroDto.AutorId) == null) // ¡AQUÍ: DEBE LLEVAR await!
             {
-                return BadRequest($"El Autor con ID {actualizarLibroDto.AutorId} no existe."); // HTTP 400
+                return BadRequest($"El Autor con ID {actualizarLibroDto.AutorId} no existe.");
             }
 
             var libroParaActualizar = new Models.Libro
@@ -95,28 +95,28 @@ namespace LibrosAutoresApi.Controllers
                 Id = actualizarLibroDto.Id,
                 Titulo = actualizarLibroDto.Titulo,
                 AnioPublicacion = actualizarLibroDto.AnioPublicacion,
-                AutorId = actualizarLibroDto.AutorId // ¡IMPORTANTE! Asignar AutorId desde el DTO
+                AutorId = actualizarLibroDto.AutorId
             };
 
-            bool actualizado = _libroService.Update(libroParaActualizar);
+            bool actualizado = await _libroService.Update(libroParaActualizar); // ¡AQUÍ: DEBE LLEVAR await!
             if (!actualizado)
             {
-                return NotFound(); // HTTP 404
+                return NotFound();
             }
-            return NoContent(); // HTTP 204
+            return NoContent();
         }
 
         // DELETE api/Libros/{id}
         // Elimina un libro.
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id) // Debe ser async Task
         {
-            bool eliminado = _libroService.Delete(id);
+            bool eliminado = await _libroService.Delete(id); // ¡AQUÍ: DEBE LLEVAR await!
             if (!eliminado)
             {
-                return NotFound(); // HTTP 404
+                return NotFound();
             }
-            return NoContent(); // HTTP 204
+            return NoContent();
         }
     }
 }

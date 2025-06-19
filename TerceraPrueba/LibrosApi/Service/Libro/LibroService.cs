@@ -1,12 +1,12 @@
 // Services/Libro/LibroService.cs
 // Implementación del servicio de gestión de Libros.
 
-using LibrosApi.Models; // Para referenciar la clase Libro y Autor
-using LibrosApi.Services.Autor; // Para inyectar IAutorService
+using LibrosAutoresApi.Models; // Para referenciar la clase Libro y Autor
+using LibrosAutoresApi.Services.Autor; // Para inyectar IAutorService
 using System.Collections.Generic; // Para List<T>
 using System.Linq; // Para LINQ (Any, Max, FirstOrDefault, Where, Remove)
 
-namespace LibrosApi.Services.Libro
+namespace LibrosAutoresApi.Services.Libro
 {
     public class LibroService : ILibroService
     {

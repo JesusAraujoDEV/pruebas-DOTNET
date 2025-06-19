@@ -1,12 +1,12 @@
 // Services/Biografia/BiografiaService.cs
 // Implementación del servicio de gestión de Biografías.
 
-using LibrosApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
-using LibrosApi.Services.Autor; // Para inyectar IAutorService
+using LibrosAutoresApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
+using LibrosAutoresApi.Services.Autor; // Para inyectar IAutorService
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LibrosApi.Services.Biografia
+namespace LibrosAutoresApi.Services.Biografia
 {
     public class BiografiaService : IBiografiaService
     {

@@ -1,10 +1,10 @@
 // Services/Autor/IAutorService.cs
 // Interfaz (contrato) para el servicio de gestión de Autores.
 
-using LibrosApi.Models; // Para referenciar la clase Autor
+using LibrosAutoresApi.Models; // Para referenciar la clase Autor
 using System.Collections.Generic; // Para IEnumerable
 
-namespace LibrosApi.Services.Autor
+namespace LibrosAutoresApi.Services.Autor
 {
     public interface IAutorService
     {

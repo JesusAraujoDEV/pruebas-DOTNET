@@ -1,12 +1,12 @@
 // Services/Evento/EventoService.cs
 // Implementación del servicio de gestión de Eventos.
 
-using LibrosApi.Models; // Necesario para referenciar las clases de modelos (Evento, Autor, AutorEvento)
-using LibrosApi.Services.Autor; // Para inyectar IAutorService
+using LibrosAutoresApi.Models; // Necesario para referenciar las clases de modelos (Evento, Autor, AutorEvento)
+using LibrosAutoresApi.Services.Autor; // Para inyectar IAutorService
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LibrosApi.Services.Evento
+namespace LibrosAutoresApi.Services.Evento
 {
     public class EventoService : IEventoService
     {

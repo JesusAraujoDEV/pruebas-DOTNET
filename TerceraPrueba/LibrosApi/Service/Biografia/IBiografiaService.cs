@@ -2,9 +2,9 @@
 // Interfaz para el servicio de gestión de Biografías.
 
 using System.Collections.Generic; // Para IEnumerable
-using LibrosApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
+using LibrosAutoresApi.Models; // Necesario para referenciar la clase Biografia (el modelo)
 
-namespace LibrosApi.Services.Biografia
+namespace LibrosAutoresApi.Services.Biografia
 {
     public interface IBiografiaService
     {

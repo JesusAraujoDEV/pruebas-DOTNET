@@ -1,10 +1,10 @@
 // Program.cs
 // Archivo de inicio y configuración de la aplicación ASP.NET Core Web API.
 
-using LibrosApi.Services.Autor;
-using LibrosApi.Services.Libro;
-using LibrosApi.Services.Biografia; // <-- Nuevo
-using LibrosApi.Services.Evento;   // <-- Nuevo
+using LibrosAutoresApi.Services.Autor;
+using LibrosAutoresApi.Services.Libro;
+using LibrosAutoresApi.Services.Biografia; // <-- Nuevo
+using LibrosAutoresApi.Services.Evento;   // <-- Nuevo
 
 var builder = WebApplication.CreateBuilder(args);
 
