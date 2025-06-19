@@ -2,6 +2,7 @@
 // Archivo de inicio y configuración de la aplicación ASP.NET Core Web API.
 // ... otros usings existentes
 using DotNetEnv; // ¡NUEVO!
+using LibrosAutoresApi.Services.User; // ¡NUEVO! Para IUserService y UserService
 using Microsoft.AspNetCore.Authentication.JwtBearer; // Necesario para JWT
 using Microsoft.IdentityModel.Tokens; // Necesario para SymmetricSecurityKey
 using System.Text; // Necesario para Encoding
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IAutorService, AutorService>();
 builder.Services.AddScoped<ILibroService, LibroService>();
 builder.Services.AddScoped<IBiografiaService, BiografiaService>();
 builder.Services.AddScoped<IEventoService, EventoService>();
+builder.Services.AddScoped<IUserService, UserService>(); // ¡NUEVO! Registra tu servicio de usuarios.
 
 
 // **************** CONFIGURACIÓN DE AUTENTICACIÓN JWT ****************

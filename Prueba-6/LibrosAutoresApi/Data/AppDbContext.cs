@@ -14,6 +14,7 @@ namespace LibrosAutoresApi.Data
         public DbSet<Biografia> Biografias { get; set; }
         public DbSet<Evento> Eventos { get; set; }
         public DbSet<AutorEvento> AutorEventos { get; set; } // DbSet para la tabla de unión M-M
+        public DbSet<User> Users { get; set; } = default!; // 'default!' para evitar el warning de null
 
         // Constructor que recibe las opciones del contexto (ej. el proveedor de base de datos).
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
