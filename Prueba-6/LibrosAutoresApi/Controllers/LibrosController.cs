@@ -8,21 +8,24 @@ using LibrosAutoresApi.Services.Libro; // Para el servicio de Libro
 using LibrosAutoresApi.Services.Autor; // Para el servicio de Autor (para validación)
 using LibrosAutoresApi.Dtos.Libro; // Para los DTOs de Libro
 using System.Threading.Tasks; // Necesario para Task (siempre asegúrate de tenerlo)
+using LibrosAutoresApi.Dtos.Libro; // ¡NUEVO! Para ActualizarLibroDto
 
 namespace LibrosAutoresApi.Controllers
 {
-    [ApiController] // Indica que esta clase es un controlador de API
-    [Route("api/[controller]")] // Define la ruta base: /api/Libros
-    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
     public class LibrosController : ControllerBase
     {
-        private readonly ILibroService _libroService; // Inyección del servicio de Libro
-        private readonly IAutorService _autorService; // Inyección del servicio de Autor para validación
+        private readonly ILibroService _libroService;
+        private readonly IAutorService _autorService;
+        private readonly ILogger<LibrosController> _logger; // Inyectar logger
 
-        public LibrosController(ILibroService libroService, IAutorService autorService)
+        public LibrosController(ILibroService libroService, IAutorService autorService, ILogger<LibrosController> logger)
         {
             _libroService = libroService;
             _autorService = autorService;
+            _logger = logger;
         }
 
         // GET api/Libros
@@ -75,36 +78,36 @@ namespace LibrosAutoresApi.Controllers
             return CreatedAtAction(nameof(Get), new { id = libroAgregado.Id }, libroAgregado); // HTTP 201
         }
 
-        // PUT api/Libros/{id}
-        // Actualiza un libro existente.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ActualizarLibroDto actualizarLibroDto) // Debe ser async Task
+        // ¡MÉTODO CAMBIADO A PATCH!
+        // PATCH api/Libros/{id}
+        // Actualiza parcialmente un libro existente.
+        [HttpPatch("{id}")] // ¡CAMBIADO A HttpPatch!
+        public async Task<IActionResult> Patch(int id, [FromBody] ActualizarLibroDto libroDto) // ¡CAMBIADO EL DTO!
         {
-            if (id != actualizarLibroDto.Id)
+            _logger.LogInformation("Solicitud PATCH para libro con ID: {LibroId}", id);
+            // Validar que el AutorId exista si se proporciona en el DTO
+            if (libroDto.AutorId.HasValue)
             {
-                return BadRequest("El ID del libro en la ruta no coincide con el ID en el cuerpo de la solicitud.");
+                try
+                {
+                    await _autorService.GetById(libroDto.AutorId.Value); // Solo verifica existencia, el servicio lanzará NotFoundException
+                }
+                catch (NotFoundException)
+                {
+                    return BadRequest($"El Autor con ID {libroDto.AutorId.Value} no existe.");
+                }
             }
 
-            // Validar que el AutorId exista antes de actualizar el libro.
-            if (await _autorService.GetById(actualizarLibroDto.AutorId) == null) // ¡AQUÍ: DEBE LLEVAR await!
-            {
-                return BadRequest($"El Autor con ID {actualizarLibroDto.AutorId} no existe.");
-            }
+            bool actualizado = await _libroService.Update(id, libroDto); // Pasamos el ID y el DTO
+            // El servicio lanza NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
 
-            var libroParaActualizar = new Models.Libro
-            {
-                Id = actualizarLibroDto.Id,
-                Titulo = actualizarLibroDto.Titulo,
-                AnioPublicacion = actualizarLibroDto.AnioPublicacion,
-                AutorId = actualizarLibroDto.AutorId
-            };
-
-            bool actualizado = await _libroService.Update(libroParaActualizar); // ¡AQUÍ: DEBE LLEVAR await!
+            // Si el servicio devuelve false por alguna otra razón no cubierta por NotFoundException
             if (!actualizado)
             {
-                return NotFound();
+                return StatusCode(500, "Ocurrió un error inesperado al actualizar el libro.");
             }
-            return NoContent();
+            return NoContent(); // HTTP 204
         }
 
         // DELETE api/Libros/{id}

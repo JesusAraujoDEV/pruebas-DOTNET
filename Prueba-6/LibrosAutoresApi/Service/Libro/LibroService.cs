@@ -1,25 +1,31 @@
 // Services/Libro/LibroService.cs
 // Implementación del servicio de gestión de Libros con Entity Framework Core.
 
-using LibrosAutoresApi.Models; // Para referenciar la clase Libro
-using LibrosAutoresApi.Services.Autor; // Para inyectar IAutorService
-using LibrosAutoresApi.Data; // Para inyectar AppDbContext
+using LibrosAutoresApi.Models;
+using LibrosAutoresApi.Services.Autor;
+using LibrosAutoresApi.Data;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // Necesario para ToListAsync, FirstOrDefaultAsync
-using System.Threading.Tasks; // Necesario para Task
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+
+using LibrosAutoresApi.Exceptions;
+using Microsoft.Extensions.Logging;
+using LibrosAutoresApi.Dtos.Libro; // ¡NUEVO! Para ActualizarLibroDto
 
 namespace LibrosAutoresApi.Services.Libro
 {
-    public class LibroService : ILibroService // Implementa la interfaz ILibroService
+    public class LibroService : ILibroService
     {
         private readonly IAutorService _autorService;
-        private readonly AppDbContext _context; // Inyectamos el contexto de la base de datos
+        private readonly AppDbContext _context;
+        private readonly ILogger<LibroService> _logger; // Inyectar logger
 
-        public LibroService(IAutorService autorService, AppDbContext context)
+        public LibroService(IAutorService autorService, AppDbContext context, ILogger<LibroService> logger)
         {
             _autorService = autorService;
             _context = context;
+            _logger = logger;
         }
 
         // Método para obtener todos los libros
@@ -67,23 +73,43 @@ namespace LibrosAutoresApi.Services.Libro
             return nuevoLibro;
         }
 
-        // Método para actualizar un libro existente
-        public async Task<bool> Update(Models.Libro libroActualizado)
+        // ¡MÉTODO UPDATE CAMBIADO PARA PATCH!
+        public async Task<bool> Update(int id, ActualizarLibroDto libroDto)
         {
-            var autorExiste = await _autorService.GetById(libroActualizado.AutorId);
-            if (autorExiste == null)
-            {
-                return false;
-            }
-
-            var libroExistente = await _context.Libros.FirstOrDefaultAsync(l => l.Id == libroActualizado.Id);
+            _logger.LogInformation("Intentando actualizar libro parcialmente con ID: {LibroId}", id);
+            var libroExistente = await _context.Libros.FirstOrDefaultAsync(l => l.Id == id);
             if (libroExistente == null)
             {
-                return false;
+                _logger.LogWarning("Intento de actualizar libro con ID {LibroId} fallido: no encontrado.", id);
+                throw new NotFoundException($"Libro con ID {id} no encontrado para actualizar.");
             }
 
-            _context.Entry(libroExistente).CurrentValues.SetValues(libroActualizado);
+            // Aplicar solo las propiedades que se proporcionaron en el DTO (no son nulas)
+            if (libroDto.Titulo != null)
+            {
+                libroExistente.Titulo = libroDto.Titulo;
+            }
+            if (libroDto.AnioPublicacion.HasValue)
+            {
+                libroExistente.AnioPublicacion = libroDto.AnioPublicacion.Value;
+            }
+            if (libroDto.AutorId.HasValue)
+            {
+                // Si el AutorId se proporciona, validamos que exista antes de asignarlo
+                var nuevoAutor = await _autorService.GetById(libroDto.AutorId.Value);
+                if (nuevoAutor == null)
+                {
+                    _logger.LogWarning("Intento de actualizar libro {LibroId} con AutorId {AutorId} fallido: autor no encontrado.", id, libroDto.AutorId.Value);
+                    // Lanzamos una excepción de BadRequest para indicar que el AutorId no es válido
+                    // Podrías crear una excepción personalizada para BadRequest, pero para este caso
+                    // lanzar ArgumentException es un sustituto simple que el middleware capturará.
+                    throw new ArgumentException($"El Autor con ID {libroDto.AutorId.Value} no existe.");
+                }
+                libroExistente.AutorId = libroDto.AutorId.Value;
+            }
+
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Libro con ID {LibroId} actualizado exitosamente.", id);
             return true;
         }
 

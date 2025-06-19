@@ -3,7 +3,8 @@
 
 using LibrosAutoresApi.Models;
 using System.Collections.Generic;
-using System.Threading.Tasks; // Para Task
+using System.Threading.Tasks;
+using LibrosAutoresApi.Dtos.Evento; // ¡NUEVO! Para ActualizarEventoDto
 
 namespace LibrosAutoresApi.Services.Evento
 {
@@ -12,10 +13,11 @@ namespace LibrosAutoresApi.Services.Evento
         Task<IEnumerable<Models.Evento>> GetAll();
         Task<Models.Evento?> GetById(int id);
         Task<Models.Evento> Add(Models.Evento nuevoEvento);
-        Task<bool> Update(Models.Evento eventoActualizado);
+        // ¡CAMBIO AQUÍ! Ahora el Update acepta el DTO de PATCH.
+        Task<bool> Update(int id, ActualizarEventoDto eventoDto);
         Task<bool> Delete(int id);
-        Task<bool> AddAutorToEvento(int eventoId, int autorId); // Para relación M-M
-        Task<bool> RemoveAutorFromEvento(int eventoId, int autorId); // Para relación M-M
-        Task<IEnumerable<Models.Autor>> GetAutoresByEventoId(int eventoId); // Para relación M-M (obtener autores de un evento)
+        Task<bool> AddAutorToEvento(int eventoId, int autorId);
+        Task<bool> RemoveAutorFromEvento(int eventoId, int autorId);
+        Task<IEnumerable<Models.Autor>> GetAutoresByEventoId(int eventoId);
     }
 }

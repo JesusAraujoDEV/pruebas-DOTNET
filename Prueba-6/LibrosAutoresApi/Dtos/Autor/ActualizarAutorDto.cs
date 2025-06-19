@@ -1,20 +1,17 @@
 // Dtos/Autor/ActualizarAutorDto.cs
-// DTO para actualizar un Autor existente.
+// DTO para actualizar parcialmente un Autor.
 
-using System.ComponentModel.DataAnnotations; // Para atributos de validación
+using System; // Para DateTime?
+using System.ComponentModel.DataAnnotations; // Para StringLength (opcional en propiedades nullable)
 
 namespace LibrosAutoresApi.Dtos.Autor
 {
     public class ActualizarAutorDto
     {
-        [Required(ErrorMessage = "El ID del autor es obligatorio para actualizar.")]
-        public int Id { get; set; }
-
-        [Required(ErrorMessage = "El nombre del autor es obligatorio.")]
+        // Las propiedades son nullable (?) para indicar que son opcionales
         [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres.")]
-        public required string Nombre { get; set; }
+        public string? Nombre { get; set; }
 
-        [Required(ErrorMessage = "La fecha de nacimiento es obligatoria.")]
-        public DateTime FechaNacimiento { get; set; }
+        public DateTime? FechaNacimiento { get; set; }
     }
 }

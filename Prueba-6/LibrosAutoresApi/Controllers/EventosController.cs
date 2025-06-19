@@ -8,21 +8,24 @@ using LibrosAutoresApi.Services.Evento; // Necesario para referenciar el servici
 using LibrosAutoresApi.Services.Autor; // Para validar existencia de Autor (servicio IAutorService)
 using LibrosAutoresApi.Dtos.Evento; // Para los DTOs de Evento
 using System.Threading.Tasks; // Necesario para Task
+using LibrosAutoresApi.Dtos.Evento; // ¡NUEVO! Para ActualizarEventoDto
 
 namespace LibrosAutoresApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Ruta base: /api/Eventos
-    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
+    [Route("api/[controller]")]
+    [Authorize]
     public class EventosController : ControllerBase
     {
         private readonly IEventoService _eventoService;
         private readonly IAutorService _autorService;
+        private readonly ILogger<EventosController> _logger; // Inyectar logger
 
-        public EventosController(IEventoService eventoService, IAutorService autorService)
+        public EventosController(IEventoService eventoService, IAutorService autorService, ILogger<EventosController> logger)
         {
             _eventoService = eventoService;
             _autorService = autorService;
+            _logger = logger;
         }
 
         // GET api/Eventos
@@ -73,29 +76,23 @@ namespace LibrosAutoresApi.Controllers
             return CreatedAtAction(nameof(Get), new { id = nuevoEvento.Id }, nuevoEvento);
         }
 
-        // PUT api/Eventos/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ActualizarEventoDto actualizarEventoDto) // Ahora async Task
+        // ¡MÉTODO CAMBIADO A PATCH!
+        // PATCH api/Eventos/{id}
+        // Actualiza parcialmente un evento existente.
+        [HttpPatch("{id}")] // ¡CAMBIADO A HttpPatch!
+        public async Task<IActionResult> Patch(int id, [FromBody] ActualizarEventoDto eventoDto) // ¡CAMBIADO EL DTO!
         {
-            if (id != actualizarEventoDto.Id)
-            {
-                return BadRequest("El ID en la ruta no coincide con el ID en el cuerpo.");
-            }
+            _logger.LogInformation("Solicitud PATCH para evento con ID: {EventoId}", id);
 
-            var eventoParaActualizar = new Models.Evento
-            {
-                Id = actualizarEventoDto.Id,
-                Nombre = actualizarEventoDto.Nombre,
-                Fecha = actualizarEventoDto.Fecha,
-                Ubicacion = actualizarEventoDto.Ubicacion
-            };
+            bool actualizado = await _eventoService.Update(id, eventoDto); // Pasamos el ID y el DTO
+            // El servicio lanza NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
 
-            bool actualizado = await _eventoService.Update(eventoParaActualizar); // Usamos await
             if (!actualizado)
             {
-                return NotFound();
+                return StatusCode(500, "Ocurrió un error inesperado al actualizar el evento.");
             }
-            return NoContent();
+            return NoContent(); // HTTP 204
         }
 
         // POST api/Eventos/{eventoId}/autores

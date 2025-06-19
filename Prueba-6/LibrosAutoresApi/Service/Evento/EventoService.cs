@@ -2,24 +2,30 @@
 // Implementación del servicio de gestión de Eventos con Entity Framework Core.
 
 using LibrosAutoresApi.Models;
-using LibrosAutoresApi.Services.Autor; // Para inyectar IAutorService
-using LibrosAutoresApi.Data; // Para inyectar AppDbContext
+using LibrosAutoresApi.Services.Autor;
+using LibrosAutoresApi.Data;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // Necesario para ToListAsync, FirstOrDefaultAsync, Include
-using System.Threading.Tasks; // Necesario para Task
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+
+using LibrosAutoresApi.Exceptions;
+using Microsoft.Extensions.Logging;
+using LibrosAutoresApi.Dtos.Evento; // ¡NUEVO! Para ActualizarEventoDto
 
 namespace LibrosAutoresApi.Services.Evento
 {
     public class EventoService : IEventoService
     {
         private readonly IAutorService _autorService;
-        private readonly AppDbContext _context; // Inyectamos el contexto de la base de datos
+        private readonly AppDbContext _context;
+        private readonly ILogger<EventoService> _logger; // Inyectar logger
 
-        public EventoService(IAutorService autorService, AppDbContext context)
+        public EventoService(IAutorService autorService, AppDbContext context, ILogger<EventoService> logger)
         {
             _autorService = autorService;
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Models.Evento>> GetAll()
@@ -47,18 +53,36 @@ namespace LibrosAutoresApi.Services.Evento
             return nuevoEvento;
         }
 
-        public async Task<bool> Update(Models.Evento eventoActualizado)
+        // ¡MÉTODO UPDATE CAMBIADO PARA PATCH!
+        public async Task<bool> Update(int id, ActualizarEventoDto eventoDto)
         {
-            var eventoExistente = await _context.Eventos.FirstOrDefaultAsync(e => e.Id == eventoActualizado.Id);
+            _logger.LogInformation("Intentando actualizar evento parcialmente con ID: {EventoId}", id);
+            var eventoExistente = await _context.Eventos.FirstOrDefaultAsync(e => e.Id == id);
             if (eventoExistente == null)
             {
-                return false;
+                _logger.LogWarning("Intento de actualizar evento con ID {EventoId} fallido: no encontrado.", id);
+                throw new NotFoundException($"Evento con ID {id} no encontrado para actualizar.");
             }
 
-            _context.Entry(eventoExistente).CurrentValues.SetValues(eventoActualizado);
+            // Aplicar solo las propiedades que se proporcionaron en el DTO (no son nulas)
+            if (eventoDto.Nombre != null)
+            {
+                eventoExistente.Nombre = eventoDto.Nombre;
+            }
+            if (eventoDto.Fecha.HasValue)
+            {
+                eventoExistente.Fecha = eventoDto.Fecha.Value;
+            }
+            if (eventoDto.Ubicacion != null)
+            {
+                eventoExistente.Ubicacion = eventoDto.Ubicacion;
+            }
+
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Evento con ID {EventoId} actualizado exitosamente.", id);
             return true;
         }
+
 
         public async Task<bool> Delete(int id)
         {

@@ -3,17 +3,18 @@
 
 using LibrosAutoresApi.Models; // Para referenciar la clase Libro
 using System.Collections.Generic; // Para IEnumerable
-using System.Threading.Tasks; // Necesario para Task
+using System.Threading.Tasks; // Para Task
+using LibrosAutoresApi.Dtos.Libro; // ¡NUEVO! Para ActualizarLibroDto
 
 namespace LibrosAutoresApi.Services.Libro
 {
     public interface ILibroService
     {
-        Task<IEnumerable<Models.Libro>> GetAll(); // Ahora devuelve Task<IEnumerable<Libro>>
-        Task<Models.Libro?> GetById(int id); // Ahora devuelve Task<Libro?>
-        Task<IEnumerable<Models.Libro>> GetByAutorId(int autorId); // Ahora devuelve Task<IEnumerable<Libro>>
-        Task<Models.Libro?> Add(Models.Libro nuevoLibro); // Ahora devuelve Task<Libro?>
-        Task<bool> Update(Models.Libro libroActualizado); // Ahora devuelve Task<bool>
-        Task<bool> Delete(int id); // Ahora devuelve Task<bool>
+        Task<IEnumerable<Models.Libro>> GetAll();
+        Task<Models.Libro?> GetById(int id);
+        Task<IEnumerable<Models.Libro>> GetByAutorId(int autorId);
+        Task<Models.Libro?> Add(Models.Libro nuevoLibro);
+        Task<bool> Update(int id, ActualizarLibroDto libroDto);
+        Task<bool> Delete(int id);
     }
 }

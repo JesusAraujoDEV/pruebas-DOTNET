@@ -1,19 +1,20 @@
 // Services/Autor/AutorService.cs
 // Implementación del servicio de gestión de Autores con Entity Framework Core.
 
-using LibrosAutoresApi.Models; // Para referenciar la clase Autor
-using LibrosAutoresApi.Data; // Para inyectar AppDbContext
+using LibrosAutoresApi.Models;
+using LibrosAutoresApi.Data;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // Necesario para ToListAsync, FirstOrDefaultAsync
-using System.Threading.Tasks; // Necesario para Task
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
-using LibrosAutoresApi.Exceptions; // Para usar tu excepción NotFoundException
-using Microsoft.Extensions.Logging; // Para el logger
+using LibrosAutoresApi.Exceptions;
+using Microsoft.Extensions.Logging;
+using LibrosAutoresApi.Dtos.Autor; // ¡NUEVO! Para ActualizarAutorDto
 
 namespace LibrosAutoresApi.Services.Autor
 {
-    public class AutorService : IAutorService // Implementa la interfaz IAutorService
+    public class AutorService : IAutorService
     {
         private readonly AppDbContext _context;
         private readonly ILogger<AutorService> _logger;
@@ -66,21 +67,29 @@ namespace LibrosAutoresApi.Services.Autor
             return nuevoAutor;
         }
 
-        // Método para actualizar un autor existente
-        public async Task<bool> Update(Models.Autor autorActualizado)
+        // ¡MÉTODO UPDATE CAMBIADO PARA PATCH!
+        public async Task<bool> Update(int id, ActualizarAutor autorDto)
         {
-            _logger.LogInformation("Intentando actualizar autor con ID: {AutorId}", autorActualizado.Id);
-            var autorExistente = await _context.Autores.FirstOrDefaultAsync(a => a.Id == autorActualizado.Id);
+            _logger.LogInformation("Intentando actualizar autor parcialmente con ID: {AutorId}", id);
+            var autorExistente = await _context.Autores.FirstOrDefaultAsync(a => a.Id == id);
             if (autorExistente == null)
             {
-                _logger.LogWarning("Intento de actualizar autor con ID {AutorId} fallido: no encontrado.", autorActualizado.Id);
-                throw new NotFoundException($"Autor con ID {autorActualizado.Id} no encontrado para actualizar.");
+                _logger.LogWarning("Intento de actualizar autor con ID {AutorId} fallido: no encontrado.", id);
+                throw new NotFoundException($"Autor con ID {id} no encontrado para actualizar.");
             }
 
-            // Actualiza las propiedades del autor existente.
-            _context.Entry(autorExistente).CurrentValues.SetValues(autorActualizado);
+            // Aplicar solo las propiedades que se proporcionaron en el DTO (no son nulas)
+            if (autorDto.Nombre != null)
+            {
+                autorExistente.Nombre = autorDto.Nombre;
+            }
+            if (autorDto.FechaNacimiento.HasValue) // Para tipos anulables como DateTime?
+            {
+                autorExistente.FechaNacimiento = autorDto.FechaNacimiento.Value;
+            }
+
             await _context.SaveChangesAsync();
-            _logger.LogInformation("Autor con ID {AutorId} actualizado exitosamente.", autorActualizado.Id);
+            _logger.LogInformation("Autor con ID {AutorId} actualizado exitosamente.", id);
             return true;
         }
 

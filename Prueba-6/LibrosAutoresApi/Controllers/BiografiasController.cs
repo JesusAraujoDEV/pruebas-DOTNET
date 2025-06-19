@@ -7,19 +7,22 @@ using LibrosAutoresApi.Models; // Necesario para referenciar la clase Biografia 
 using LibrosAutoresApi.Services.Biografia; // Necesario para referenciar el servicio IBiografiaService
 using LibrosAutoresApi.Dtos.Biografia; // Para los DTOs de Biografia
 using System.Threading.Tasks; // Necesario para Task
+using LibrosAutoresApi.Dtos.Biografia; // ¡NUEVO! Para ActualizarBiografiaDto
 
 namespace LibrosAutoresApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")] // Ruta base: /api/Biografias
-    [Authorize] // ¡AHORA REQUIERE AUTENTICACIÓN JWT PARA ACCEDER A CUALQUIER MÉTODO AQUÍ!
+    [Route("api/[controller]")]
+    [Authorize]
     public class BiografiasController : ControllerBase
     {
         private readonly IBiografiaService _biografiaService;
+        private readonly ILogger<BiografiasController> _logger; // Inyectar logger
 
-        public BiografiasController(IBiografiaService biografiaService)
+        public BiografiasController(IBiografiaService biografiaService, ILogger<BiografiasController> logger)
         {
             _biografiaService = biografiaService;
+            _logger = logger;
         }
 
         // GET api/Biografias/{autorId}
@@ -56,26 +59,21 @@ namespace LibrosAutoresApi.Controllers
             return CreatedAtAction(nameof(Get), new { autorId = biografiaAgregada.AutorId }, biografiaAgregada); // HTTP 201
         }
 
-        // PUT api/Biografias/{autorId}
-        // Actualiza una biografía existente.
-        [HttpPut("{autorId}")]
-        public async Task<IActionResult> Put(int autorId, [FromBody] ActualizarBiografiaDto actualizarBiografiaDto) // Ahora async Task
+        // ¡MÉTODO CAMBIADO A PATCH!
+        // PATCH api/Biografias/{autorId}
+        // Actualiza parcialmente una biografía existente.
+        [HttpPatch("{autorId}")] // ¡CAMBIADO A HttpPatch!
+        public async Task<IActionResult> Patch(int autorId, [FromBody] ActualizarBiografiaDto biografiaDto) // ¡CAMBIADO EL DTO!
         {
-            if (autorId != actualizarBiografiaDto.AutorId)
-            {
-                return BadRequest("El ID del autor en la ruta no coincide con el ID en el cuerpo."); // HTTP 400
-            }
+            _logger.LogInformation("Solicitud PATCH para biografía de AutorId: {AutorId}", autorId);
 
-            var biografiaParaActualizar = new Models.Biografia
-            {
-                AutorId = actualizarBiografiaDto.AutorId,
-                Contenido = actualizarBiografiaDto.Contenido
-            };
+            bool actualizado = await _biografiaService.Update(autorId, biografiaDto); // Pasamos el AutorId y el DTO
+            // El servicio lanza NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
 
-            bool actualizado = await _biografiaService.Update(biografiaParaActualizar); // Usamos await
             if (!actualizado)
             {
-                return NotFound($"Biografía no encontrada para el autor con ID {autorId}."); // HTTP 404
+                return StatusCode(500, "Ocurrió un error inesperado al actualizar la biografía.");
             }
             return NoContent(); // HTTP 204
         }

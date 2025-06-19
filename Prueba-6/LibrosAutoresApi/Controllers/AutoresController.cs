@@ -12,15 +12,17 @@ using System.Threading.Tasks; // Necesario para Task
 using Microsoft.AspNetCore.Authorization; // Para [Authorize]
 using Microsoft.Extensions.Logging; // Para inyectar ILogger
 
+using LibrosAutoresApi.Dtos.Autor; // ¡NUEVO! Para ActualizarAutorDto
+
 namespace LibrosAutoresApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Este controlador ahora requiere autenticación
+    [Authorize]
     public class AutoresController : ControllerBase
     {
         private readonly IAutorService _autorService;
-        private readonly ILogger<AutoresController> _logger; // Inyección del logger en el controlador
+        private readonly ILogger<AutoresController> _logger;
 
         public AutoresController(IAutorService autorService, ILogger<AutoresController> logger)
         {
@@ -78,27 +80,25 @@ namespace LibrosAutoresApi.Controllers
             return CreatedAtAction(nameof(Get), new { id = nuevoAutor.Id }, nuevoAutor); // HTTP 201
         }
 
-        // PUT api/Autores/{id}
-        // Actualiza un autor existente.
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] ActualizarAutorDto actualizarAutorDto) // Ahora async Task
+        // ¡MÉTODO CAMBIADO A PATCH!
+        // PATCH api/Autores/{id}
+        // Actualiza parcialmente un autor existente.
+        [HttpPatch("{id}")] // ¡CAMBIADO A HttpPatch!
+        public async Task<IActionResult> Patch(int id, [FromBody] ActualizarAutorDto autorDto) // ¡CAMBIADO EL DTO!
         {
-            if (id != actualizarAutorDto.Id)
-            {
-                return BadRequest("El ID en la ruta no coincide con el ID en el cuerpo."); // HTTP 400
-            }
+            _logger.LogInformation("Solicitud PATCH para autor con ID: {AutorId}", id);
+            // Ya no necesitamos validar id != autorDto.Id porque PATCH se enfoca en el ID de la URI
+            // y el DTO de PATCH no contiene un ID propio.
 
-            var autorParaActualizar = new Models.Autor
-            {
-                Id = actualizarAutorDto.Id,
-                Nombre = actualizarAutorDto.Nombre,
-                FechaNacimiento = actualizarAutorDto.FechaNacimiento
-            };
+            bool actualizado = await _autorService.Update(id, autorDto); // Pasamos el ID y el DTO
+            // El servicio lanza NotFoundException si no lo encuentra.
+            // El middleware lo capturará y devolverá un 404.
 
-            bool actualizado = await _autorService.Update(autorParaActualizar); // Usamos await
+            // Si el servicio devuelve false por alguna otra razón no cubierta por NotFoundException,
+            // (aunque con la nueva lógica de excepciones, es menos probable que pase por aquí).
             if (!actualizado)
             {
-                return NotFound(); // HTTP 404
+                return StatusCode(500, "Ocurrió un error inesperado al actualizar el autor.");
             }
             return NoContent(); // HTTP 204
         }
