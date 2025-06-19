@@ -85,7 +85,7 @@ namespace InventarioConsolaApp // Si tu plantilla usa namespace, manténlo. Si n
 
             double precio;
             Console.Write("Ingrese el Precio del Producto: ");
-            // Loop para asegurarse de que el usuario ingrese un precio válido (número positivo)
+            // Loop para asegurarse de que el usuario ingrese un precio válido (número positivo)    
             while (!double.TryParse(Console.ReadLine(), out precio) || precio < 0)
             {
                 Console.WriteLine("Precio inválido. Por favor, ingrese un número positivo para el precio:");
